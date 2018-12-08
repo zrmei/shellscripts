@@ -109,7 +109,24 @@ fi
 EOF
 }
 
-function CompressData() {
+function CompressGitData() {
     $RAY_SUDO git reflog expire --all --expire=now
     $RAY_SUDO git gc --prune=now --aggressive
+}
+
+function RemoveAllGitConmmitLog() {
+    #Checkout
+    $RAY_SUDO git checkout --orphan latest_branch
+    #Add all the files
+    $RAY_SUDO git add -A
+    #Commit the changes
+    $RAY_SUDO git commit -am "commit message"
+    #Delete the branch
+    $RAY_SUDO git branch -D master
+    #Rename the current branch to master
+    $RAY_SUDO git branch -m master
+    #Finally, force update your repository
+    $RAY_SUDO git push -f origin master
+
+    CompressGitData
 }
