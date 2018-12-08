@@ -1,0 +1,95 @@
+#!/bin/bash
+SCRIP_FILE_PATH=$(dirname $(readlink -f "$0"))
+SCRIP_FILE_NAME=$(basename "$0")
+
+function print_help() {
+cat <<EOF
+useage: $SCRIP_FILE_NAME [option] [args...]
+
+args:
+    -u,--user       setup mysql user
+    -p,--password   setup mysql password
+    -d,--dir        setup the localtion backup data to save
+    -D,--database   setup the database name to save
+    -h,--host       setup host
+    --help       show this help
+
+options:
+    --init          start init to save above things
+    --clear         clear config
+EOF
+}
+
+args=( "$@" )
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -u) mysql_user="$2"; shift 2;;
+        -p) mysql_password="$2"; shift 2;;
+        -d) backup_dir="$2"; shift 2;;
+        -D) database="$2"; shift 2;;
+        -h) host="$2"; shift 2;;
+        -P) Port="$2"; shift 2;;
+
+        --init) boolInit=true; shift 1;;
+        --clear) rm -f /tmp/.backup.sh; exit 0;;
+
+        --user=*) mysql_user="${1#*=}"; shift 1;;
+        --password=*) mysql_password="${1#*=}"; shift 1;;
+        --dir=*) backup_dir="${1#*=}"; shift 1;;
+        --database=*) database="${1#*=}"; shift 1;;
+        --host=*) host="${1#*=}"; shift 1;;
+        --Port=*) Port="${1#*=}"; shift 1;;
+
+        --help) print_help; exit 0;;
+        -*) echo "unknown option: $1\n"; print_help; exit 1;;
+        *) db_table="$1"; shift 1;;
+    esac
+done
+
+backup_script=/tmp/.backup.sh
+
+if [ ! -z "$boolInit" ]; then
+    tail -n +63 $0 > $backup_script
+    sed -i -e "s#{{mysql_user}}#$mysql_user#g" $backup_script
+    sed -i -e "s#{{mysql_password}}#$mysql_password#g" $backup_script
+    sed -i -e "s#{{backup_dir}}#$backup_dir#g" $backup_script
+    sed -i -e "s#{{database}}#$database#g" $backup_script
+    exit 0
+elif [[ -f $backup_script ]]; then
+    /bin/bash $backup_script ${args[@]}
+    exit $?
+else
+    print_help
+    exit 1
+fi
+
+#!/bin/bash
+mysql_user=${mysql_user:-'{{mysql_user}}'}
+mysql_password=${mysql_password:-'{{mysql_password}}'}
+backup_dir=${backup_dir:-'{{backup_dir}}'}
+database=${database:-'{{database}}'}
+host=${host:-'localhost'}
+Port=${Port:-3306}
+
+if [ $# -eq 1 ]; then
+    db_table=$1
+fi
+
+if [ ! -z "$db_table" ]; then
+    BACKFILE=$database-$db_table-$(date +"%F_%H%M%S")
+else
+    BACKFILE=$database-$(date +"%F_%H%M%S")
+fi
+
+echo $BACKFILE;
+
+if [ ! -d $backup_dir ]; then
+    mkdir -p $backup_dir
+fi
+
+mysqldump --opt $database \
+   --add-drop-database --compress  --extended-insert --insert-ignore \
+   -u$mysql_user -p"$mysql_password" -h$host -P$Port $db_table | gzip -9 >$backup_dir/$BACKFILE.sql.gz
+
+exit 0

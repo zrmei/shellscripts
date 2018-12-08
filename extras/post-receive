@@ -1,0 +1,91 @@
+#!/usr/bin/env zsh
+
+if [ $(id -u) != "0" ]; then
+    sudo $0 $@
+    exit $?
+fi
+
+. /opt/shellscripts/functions.sh
+
+RRequire functions.os functions.systemd functions.lnmp
+
+    echo "*******************BEGIN*********************"
+
+MASTER=0
+while read oldrev newrev refname
+do
+    branch=$(git rev-parse --symbolic --abbrev-ref $refname)
+    if [ "master" = "$branch" ]; then
+        MASTER=1
+    fi
+done
+
+if [ $MASTER -eq 0 ]; then
+    echo "你不是在主分支操作，服务器代码不会更新。。。"
+    echo "********************END**********************"
+    exit 0
+fi
+
+WWWHomeDir=${WEB_HOMEDIR:-/home/wwwroot}
+PHPBin=${PHP_BIN:-php}
+
+NowPath=$(pwd)
+WWWDIR=$(echo $(basename $NowPath) | cut -d . -f1)
+#代码的仓库目录
+DeployPath="$WWWHomeDir/$WWWDIR"
+
+FIRST_TIME=0
+#如果目录不存在则clone一下
+if ! IsDir $DeployPath; then
+    cd $WWWHomeDir
+    git clone $NowPath $WWWDIR
+    chmod a+rw,o+rw $DeployPath
+    FIRST_TIME=1
+fi
+
+# 切换到代码目录
+cd $DeployPath
+
+#更新到最新的代码，撤销一切更改
+git fetch --all
+git reset --hard origin/master
+git pull
+
+#如果是composer管理的话要做一点而外工作
+if IsFile composer.json; then
+    if IsCommandExists composer; then
+        COMPOSER='composer'
+    else
+        if ! IsFile composer.phar && InstallApps curl; then
+            curl -sS https://getcomposer.org/installer | sudo -u www $PHPBin
+            rm -f composer-setup.php
+        fi
+        COMPOSER="$PHPBin composer.phar"
+    fi
+
+    if [ ! IsEmpty $(git log -1 --name-only | grep ^composer.json) ] || [ $FIRST_TIME -eq 1 ] ; then
+        eval "sudo -u www $COMPOSER install --optimize-autoloader --no-dev --no-plugins --no-scripts"
+    else
+        #如果已经初始化好了，直接更新缓存
+        eval "sudo -u www $COMPOSER dump-autoload --optimize"
+    fi
+fi
+
+if IsFile think; then
+    $PHPBin think optimize:autoload
+    $PHPBin think optimize:config
+    $PHPBin think optimize:route
+elif IsFile artisan; then
+    $PHPBin artisan route:cache
+    $PHPBin artisan view:cache
+    $PHPBin artisan config:cache
+fi
+
+if ! IsEmpty "$(git log -1 --name-only --pretty=oneline | grep  '^systemd-services/systemd-init.sh')"; then
+    ReloadSystemdUnits systemd-services
+fi
+
+MakeDirsOwnToWeb $DeployPath
+
+    echo "********************END**********************"
+exit 0
