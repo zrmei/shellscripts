@@ -185,8 +185,13 @@ function ChangeHostName() {
     local oldName="$(hostname)"
     local Name=$1
     $RAY_SUDO hostname $Name
-    $RAY_SUDO bash -c "sed -i 's/$oldName/$Name/g' /etc/hostname;"
-    $RAY_SUDO bash -c "sed -i 's/$oldName/$Name/g' /etc/hosts;"
+
+    if IsFile /etc/hostname; then
+        $RAY_SUDO bash -c "sed -i 's/$oldName/$Name/g' /etc/hostname;"
+    fi
+    if IsFile /etc/hosts; then
+        $RAY_SUDO bash -c "sed -i 's/$oldName/$Name/g' /etc/hosts;"
+    fi
 }
 
 function UpdateDateTime() {
