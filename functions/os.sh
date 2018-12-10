@@ -253,4 +253,3 @@ function FindFileGreaterthan() {
         $RAY_SUDO find / -size +${1:-50}M -type f -printf "%15s\t%p\n" 2>/dev/null | sort -n -r | less
     fi
 }
-
