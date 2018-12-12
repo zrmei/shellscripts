@@ -63,8 +63,12 @@ if IsFile composer.json; then
         COMPOSER="$PHPBin composer.phar"
     fi
 
-    if [ ! IsEmpty $(git log -1 --name-only | grep ^composer.json) ] || [ $FIRST_TIME -eq 1 ] ; then
-        eval "sudo -u www $COMPOSER install --optimize-autoloader --no-dev --no-plugins --no-scripts"
+     if git log -1 --name-only | grep  -q '^composer\.json' ; then
+        if  IsFile composer.lock; then
+             eval "sudo -u www $COMPOSER update --optimize-autoloader --no-dev --no-plugins --no-scripts"
+        else
+            eval "sudo -u www $COMPOSER install --optimize-autoloader --no-dev --no-plugins --no-scripts"
+        fi
     else
         #如果已经初始化好了，直接更新缓存
         eval "sudo -u www $COMPOSER dump-autoload --optimize"
