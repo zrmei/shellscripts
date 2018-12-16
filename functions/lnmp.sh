@@ -184,8 +184,9 @@ function MakeDirsOwnToWeb() {
 
     for dir in $@; do
         if IsDir $dir; then
-            $RAY_SUDO chown -R $User:$User $dir
-            $RAY_SUDO chmod -R 755 $dir
+            $RAY_SUDO  chmod -R $User:$User $dir
+            $RAY_SUDO  find $dir -type f -exec chmod  644  {} \;
+            $RAY_SUDO  find $dir -type d -exec chmod  755  {} \;
         else
             ray_echo_Red "$dir is not a dir!"
         fi
