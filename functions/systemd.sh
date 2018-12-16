@@ -134,7 +134,10 @@ EOF
         $RAY_SUDO rm -f $unit
     done
 
+    local cur_path=$(pwd)
+    cd "$script_path" 
     $RAY_SUDO /usr/bin/env zsh $script_path/$systemdInit
+    cd "$cur_path"
 
     for unit in `find $script_path -name "[a-z]*.service"`; do
         SystemdEnable $unit
