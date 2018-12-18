@@ -185,8 +185,7 @@ function MakeDirsOwnToWeb() {
     for dir in $@; do
         if IsDir $dir; then
             $RAY_SUDO  chown -R $User:$User $dir
-            $RAY_SUDO  find $dir -type f -exec chmod  644  {} \;
-            $RAY_SUDO  find $dir -type d -exec chmod  755  {} \;
+            $RAY_SUDO  chmod -R 755 $dir
         else
             ray_echo_Red "$dir is not a dir!"
         fi
@@ -217,7 +216,7 @@ function CountAccessIP() {
 
     if IsCommandExists lnmp; then
         if IsFile /home/wwwlogs/access.$1.log; then
-            cat /home/wwwlogs/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -${2:-10}
+            cat /home/wwwlogs/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -n ${2:-10}
         fi
     fi
 }

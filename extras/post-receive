@@ -38,8 +38,7 @@ FIRST_TIME=0
 #如果目录不存在则clone一下
 if ! IsDir $DeployPath; then
     cd $WWWHomeDir
-    git clone $NowPath $WWWDIR
-    chmod a+rw,o+rw $DeployPath
+    sudo -u www git clone $NowPath $WWWDIR
     FIRST_TIME=1
 fi
 
@@ -47,9 +46,9 @@ fi
 cd $DeployPath
 
 #更新到最新的代码，撤销一切更改
-git fetch --all
-git reset --hard origin/master
-git pull
+sudo -u www git fetch --all
+sudo -u www git reset --hard origin/master
+sudo -u www git pull
 
 #如果是composer管理的话要做一点而外工作
 if IsFile composer.json; then
@@ -76,20 +75,20 @@ if IsFile composer.json; then
 fi
 
 if IsFile think; then
-    $PHPBin think optimize:autoload
-    $PHPBin think optimize:config
-    $PHPBin think optimize:route
+    sudo -u www $PHPBin think optimize:autoload
+    sudo -u www $PHPBin think optimize:config
+    sudo -u www $PHPBin think optimize:route
 elif IsFile artisan; then
-    $PHPBin artisan route:cache
-    $PHPBin artisan view:cache
-    $PHPBin artisan config:cache
+    sudo -u www $PHPBin artisan route:cache
+    sudo -u www $PHPBin artisan view:cache
+    sudo -u www $PHPBin artisan config:cache
 fi
 
-if ! IsEmpty "$(git log -1 --name-only --pretty=oneline | grep  '^systemd-services/systemd-init.sh')"; then
+if git log -1 --name-only | grep  -q '^systemd-services/systemd-init.sh'; then
     ReloadSystemdUnits systemd-services
 fi
 
-MakeDirsOwnToWeb $DeployPath
+#MakeDirsOwnToWeb $DeployPath
 
     echo "********************END**********************"
 exit 0
