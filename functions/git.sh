@@ -120,7 +120,7 @@ function RemoveAllGitConmmitLog() {
     #Add all the files
     $RAY_SUDO git add -A
     #Commit the changes
-    $RAY_SUDO git commit -am "commit message"
+    $RAY_SUDO git commit -am "${1:-'commit message'}"
     #Delete the branch
     $RAY_SUDO git branch -D master
     #Rename the current branch to master
