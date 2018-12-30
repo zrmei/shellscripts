@@ -57,7 +57,7 @@ function mypublicip() {
 }
 
 function mypublicip2() {
-	curl ifconfig.me | xargs echo
+	curl ifconfig.me 2>/dev/null | xargs echo
 }
 
  function findFastMirror() {
