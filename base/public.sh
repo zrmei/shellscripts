@@ -126,10 +126,10 @@ function MakePassword() {
 # @param string tip
 #######################################
 function ConformInfo() {
-    local options="[Y/N]"
+    local options="[y/N]"
     local choice
 
-    read "choice?$1 [Y/N] Y:"
+    read "choice?$1 [y/N] "
 
     if [[ $choice:u = "Y" ]] || IsEmpty $choice; then
         return $RAY_RET_SUCCESS
@@ -221,7 +221,7 @@ function ssh_tunnel() {
         esac
     done
 
-    if IsSameStr $print_help "true"; then
+    if [[ "$print_help" == "true" ]]; then
     cat <<EOF
 useage: $0 [args...]
     -p, --port      setup remote port
