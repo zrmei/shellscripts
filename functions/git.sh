@@ -30,9 +30,9 @@ function CreateGitProject() {
     local prjDir=/home/git/$project_name.git
     $RAY_SUDO mkdir $prjDir
     $RAY_SUDO chmod 777 $prjDir
-    
+
     cd $prjDir
-    if  IsSameStr "$(pwd)" "$prjDir"; then 
+    if  IsSameStr "$(pwd)" "$prjDir"; then
         ray_none_output $RAY_SUDO git init --bare
     fi
     cd $curDir
@@ -110,11 +110,19 @@ EOF
 }
 
 function CompressGitData() {
+    if ! ConformInfo "Do you sure to compress git data"; then
+        return $RAY_RET_FAILED
+    fi
+
     $RAY_SUDO git reflog expire --all --expire=now
     $RAY_SUDO git gc --prune=now --aggressive
 }
 
 function RemoveAllGitConmmitLog() {
+    if ! ConformInfo "Do you sure to remove all commit logs";then
+        return $RAY_RET_FAILED
+    fi
+
     #Checkout
     $RAY_SUDO git checkout --orphan latest_branch
     #Add all the files
@@ -129,4 +137,21 @@ function RemoveAllGitConmmitLog() {
     $RAY_SUDO git push -f origin master
 
     CompressGitData
+
+    ray_printStatusOk "remove commit logs"
+}
+
+function InstallMyPublicKey() {
+    if IsDir /home/git; then
+        $SUDO mkdir -p /home/git/.ssh
+        local key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCraBe30CqzHKbLa60qtuLZCbV6XYshMZAnqgnW3597/9gnggtCfoAhFVEKP0VyF+yWOE4TVDHNq2aYdh1PTfG35J/1N8Pm8Czr6TzVpcLEID/ZWC46g2PP5HX0/io4AiTGS+0hnBQgQEowi9ko6nuqryKwgoYXS7/YNu1Ud+KKMSFWQtSad3WIz2oIgHxPRl4Tx0SvxBc0oQYbLVr4DjK7nL25B4SVYg4YESNdbss9lm6RnzLnIquu3FeCgTupYLl+opAbGF+Qi5por7TFCZqsItl7Ztkqiny3yiAXfM3NFdMZzIXWQDIxNh1PLoaM0jmKVOiy977phoGR4Gp8fMVb ray@ray-mei"
+        $SUDO bash -c " echo \"$key\" >> /home/git/.ssh/authorized_keys"
+        $SUDO chown -R git:git /home/git/.ssh
+        $SUDO chmod 700 /home/git/.ssh
+        $SUDO chmod 644 /home/git/.ssh/authorized_keys
+
+        ray_printStatusOk "key has been installed!"
+    else
+        ray_printStatusFailed "can not attach the home dir for git"
+    fi
 }
