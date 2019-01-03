@@ -2,6 +2,9 @@
 SCRIP_FILE_PATH=$(dirname $(readlink -f "$0"))
 SCRIP_FILE_NAME=$(basename "$0")
 
+
+backup_script_line=$(grep -n '#!/bin/bash' "$SCRIP_FILE_PATH" | tail -n 1 | awk -F: '{print $1}')
+
 function print_help() {
 cat <<EOF
 useage: $SCRIP_FILE_NAME [option] [args...]
@@ -22,6 +25,8 @@ EOF
 
 args=( "$@" )
 
+backup_script=$HOME/.backup_mysql.sh
+
 while [ "$#" -gt 0 ]; do
     case "$1" in
         -u) mysql_user="$2"; shift 2;;
@@ -32,7 +37,7 @@ while [ "$#" -gt 0 ]; do
         -P) Port="$2"; shift 2;;
 
         --init) boolInit=true; shift 1;;
-        --clear) rm -f /tmp/.backup.sh; exit 0;;
+        --clear) rm -f $backup_script; exit 0;;
 
         --user=*) mysql_user="${1#*=}"; shift 1;;
         --password=*) mysql_password="${1#*=}"; shift 1;;
@@ -47,10 +52,8 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-backup_script=/tmp/.backup.sh
-
 if [ ! -z "$boolInit" ]; then
-    tail -n +63 $0 > $backup_script
+    tail -n +$backup_script_line "$SCRIP_FILE_PATH" > $backup_script
     sed -i -e "s#{{mysql_user}}#$mysql_user#g" $backup_script
     sed -i -e "s#{{mysql_password}}#$mysql_password#g" $backup_script
     sed -i -e "s#{{backup_dir}}#$backup_dir#g" $backup_script

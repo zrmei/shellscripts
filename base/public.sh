@@ -112,13 +112,7 @@ function CreateFile() {
 # @param width default is 30
 #######################################
 function MakePassword() {
-    local width=30
-
-    if ! IsEmpty $1; then
-        width=$1
-    fi
-
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9/\-=[];,._+{}:<>@%^&*()' | fold -w $width | head -n 1
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9/\-=[];,._+{}:<>@%^&*()' | fold -w ${1:-30} | head -n 1
 }
 
 #######################################

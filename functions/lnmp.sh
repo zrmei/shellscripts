@@ -13,7 +13,7 @@ function mkTemplateVHost() {
     if ! IsEmpty $plugin; then
         plugin="include rewrite/$plugin.conf;";
 
-    else 
+    else
         plugin=<<EOF
 
     location / {
@@ -58,6 +58,15 @@ server {
     include enable-php.conf;
     $plugin
 
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    fastcgi_hide_header X-Powered-By;
+    add_header X-Powered-By PHP/5.2.16;
+
+    #add_header strict-transport-security: max-age=16070400; includeSubDomains;
+
     #location @backend_server {
     #    fastcgi_connect_timeout     60s;
     #    fastcgi_read_timeout        60s;
@@ -84,12 +93,11 @@ server {
         deny all;
     }
 
-    error_page 404 =200 /404.html;
-    error_page 403 =200 /404.html;
-
-    location = /404.html {
-        root $RAY_SCRIP_FILE_PATH/extras/www;
-        try_files \$uri \$uri/ =200;
+    location ~* \\.(gif|jpg|jepg|png|bmp)$ {
+        valid_referers none blocked;
+        if (\$invalid_referer) {
+            return 403;
+        }
     }
 
     access_log  /home/wwwlogs/access.$2.log;

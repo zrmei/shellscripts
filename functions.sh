@@ -39,7 +39,7 @@ function ShowFunctions() {
 
         echo "$name:"
 
-        for func in `cat $file | grep -Eo " [A-Z](.*?)\(\) " | tr -d '()' | sort`; do
+        for func in `cat $file | grep -Eo " [A-Za-z](.*?)\(\) " | tr -d '()' | sort`; do
             printf "%-22s" $func
             if (( $num % $step )); then
                 echo -n "\t"
@@ -66,7 +66,7 @@ function UpdateRayFunctions() {
     . $RAY_SCRIP_FILE_PATH/functions.sh all
 
     if IsRedHat && CheckCentOSVersion -le 6; then
-        $RAY_SUDO crontab -l | { cat; echo "* * * * 0 /usr/bin/env bash -c \"cd $RAY_SCRIP_FILE_PATH && if ! git pull; then git fetch --all; git reset --hard origin/master; git pull; fi\""; } | uniq | $RAY_SUDO crontab -
+        $RAY_SUDO crontab -l | { cat; echo "15 05 * * 0 /usr/bin/env bash -c \"cd $RAY_SCRIP_FILE_PATH && if ! git pull; then git fetch --all; git reset --hard origin/master; git pull; fi\""; } | uniq | $RAY_SUDO crontab -
         cd $curPath
         return $RAY_RET_SUCCESS
     fi

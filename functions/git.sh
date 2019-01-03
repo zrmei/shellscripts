@@ -8,17 +8,13 @@ function CreateGitProject() {
         return $RAY_RET_FAILED
     fi
 
-    if ! cat /etc/passwd | grep -q ^git; then
-        $RAY_SUDO useradd git
-        AddSudoPremission git
-        $RAY_SUDO mkdir /home/git
-        $RAY_SUDO chown git:git /home/git
-        $RAY_SUDO chmod 755 /home/git
-        $RAY_SUDO chsh -s "$(command -v git-shell)" git
+    if ! grep -q ^git /etc/passwd; then
         local Password_default=`MakePassword 30`
-        echo "git:$Password_default" | $RAY_SUDO chpasswd
+        echo -n "passwd for git: "; ray_echo_Green "$Password_default";
 
-        echo "passwd for git: $Password_default"
+        $RAY_SUDO useradd  -d /home/git -s $(command -v git-shell) -m git
+        AddSudoPremission git
+        echo "git:$Password_default" | $RAY_SUDO chpasswd
 
         if IsDir /usr/share/git-core/templates/hooks; then
             $RAY_SUDO cp -f $RAY_SCRIP_FILE_PATH/extras/post-receive /usr/share/git-core/templates/hooks/post-receive
@@ -144,6 +140,8 @@ function RemoveAllGitConmmitLog() {
 function InstallMyPublicKey() {
     if IsDir /home/git; then
         $SUDO mkdir -p /home/git/.ssh
+
+
         local key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCraBe30CqzHKbLa60qtuLZCbV6XYshMZAnqgnW3597/9gnggtCfoAhFVEKP0VyF+yWOE4TVDHNq2aYdh1PTfG35J/1N8Pm8Czr6TzVpcLEID/ZWC46g2PP5HX0/io4AiTGS+0hnBQgQEowi9ko6nuqryKwgoYXS7/YNu1Ud+KKMSFWQtSad3WIz2oIgHxPRl4Tx0SvxBc0oQYbLVr4DjK7nL25B4SVYg4YESNdbss9lm6RnzLnIquu3FeCgTupYLl+opAbGF+Qi5por7TFCZqsItl7Ztkqiny3yiAXfM3NFdMZzIXWQDIxNh1PLoaM0jmKVOiy977phoGR4Gp8fMVb ray@ray-mei"
         $SUDO bash -c " echo \"$key\" >> /home/git/.ssh/authorized_keys"
         $SUDO chown -R git:git /home/git/.ssh

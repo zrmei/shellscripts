@@ -20,6 +20,12 @@ function lnmpctl() {
         ssudo=sudo
     fi
 
+	if [ "$1" = "nginx" ]; then
+		if ! $ssudo nginx -t; then
+			return $?
+		fi
+	fi
+
     $ssudo lnmp "$@"
 }
 
