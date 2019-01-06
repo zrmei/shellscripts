@@ -3,7 +3,8 @@ function ss() {
 }
 
 function sr() {
-    $RAY_SUDO systemctl reload "$@" || return 1
+	$RAY_SUDO systemctl daemon-reload
+    $RAY_SUDO systemctl restart "$@" || return 1
 }
 
 function sp() {
@@ -13,6 +14,11 @@ function sp() {
 function st() {
     $RAY_SUDO systemctl status "$@" || return 1
 }
+
+function jo() {
+    $RAY_SUDO journalctl -f -u "$@" || return 1
+}
+
 
 function lnmpctl() {
     local ssudo
@@ -66,7 +72,7 @@ function mypublicip2() {
 	curl ifconfig.me 2>/dev/null | xargs echo
 }
 
- function findFastMirror() {
+function findFastMirror() {
      curl -s http://mirrors.ubuntu.com/mirrors.txt | \
      xargs -n1 -I {} sh -c 'echo `curl -r 0-102400 -s -w %{speed_download} -o /dev/null {}/ls-lR.gz` {}' | \
      sort -g -r | head -1 | awk '{ print $2  }'
