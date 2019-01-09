@@ -20,7 +20,3 @@ fi
 if [ -z "$LNMP_LOG_ROOT_PATH" ]; then
     LNMP_LOG_ROOT_PATH=/home/wwwlogs
 fi
-
-if ! type lnmp 2>1 >/dev/null; then
-    alias lnmp=systemctl
-fi

@@ -209,10 +209,8 @@ function TailAccessLog() {
         return $RAY_RET_FAILED
     fi
 
-    if IsCommandExists lnmp; then
-        if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
-            tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/access.$1.log
-        fi
+    if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
+        tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/access.$1.log
     fi
 }
 
@@ -222,10 +220,8 @@ function CountAccessIP() {
         return $RAY_RET_FAILED
     fi
 
-    if IsCommandExists lnmp; then
-        if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
-            cat $LNMP_LOG_ROOT_PATH/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -n ${2:-10}
-        fi
+    if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
+        cat $LNMP_LOG_ROOT_PATH/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -n ${2:-10}
     fi
 }
 
@@ -235,10 +231,8 @@ function TailErrorLog() {
         return $RAY_RET_FAILED
     fi
 
-    if IsCommandExists lnmp; then
-        if IsFile $LNMP_LOG_ROOT_PATH/error.$1.log; then
-            tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/error.$1.log
-        fi
+    if IsFile $LNMP_LOG_ROOT_PATH/error.$1.log; then
+        tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/error.$1.log
     fi
 }
 
@@ -248,20 +242,14 @@ function TailErrorNginxLog() {
         return $RAY_RET_FAILED
     fi
 
-    if IsCommandExists lnmp; then
-        if IsFile $LNMP_LOG_ROOT_PATH/nginx_error.log; then
-            tail -n ${1:-10} $LNMP_LOG_ROOT_PATH/nginx_error.log
-        fi
+    if IsFile $LNMP_LOG_ROOT_PATH/nginx_error.log; then
+        tail -n ${1:-10} $LNMP_LOG_ROOT_PATH/nginx_error.log
     fi
 }
 
 function VimVHost() {
     if [ "$1" = "-h" -o "$1" = "--help" ] || IsEmpty "$1"; then
         echo "useage: CreateVHost [filename] [port] [frame]"
-        return $RAY_RET_FAILED
-    fi
-
-    if ! IsCommandExists lnmp; then
         return $RAY_RET_FAILED
     fi
 
@@ -290,18 +278,17 @@ function VimVHost() {
 }
 
 function ListVHosts() {
-    if IsCommandExists lnmp; then
-        local conf
-        local port
-        local server_name
-        local vhost_path=${NGINX_VHOST_CONF_PATH:-/usr/local/nginx/conf/vhost}
+    local conf
+    local port
+    local server_name
+    local vhost_path=${NGINX_VHOST_CONF_PATH:-/usr/local/nginx/conf/vhost}
 
-        for conf in $vhost_path/*.conf; do
-            port=`cat $conf | grep 'listen' | awk '{print $2}' | tr "\n;" ' '`
-            server_name=`cat $conf | grep 'server_name'  | awk '{$1=""; print $0}' | tr "\n;" ' '`
-            printf "WebHost: %-20s \nport: %s \nserver_name: %s\n\n" "$(basename $conf | cut -d . -f1)" "$port" "$server_name"
-        done
-    fi
+    for conf in $vhost_path/*.conf; do
+        port=`cat $conf | grep 'listen' | awk '{print $2}' | tr "\n;" ' '`
+        server_name=`cat $conf | grep 'server_name'  | awk '{$1=""; print $0}' | tr "\n;" ' '`
+        printf "WebHost: %-20s \nport: %s \nserver_name: %s\n\n" "$(basename $conf | cut -d . -f1)" "$port" "$server_name"
+    done
+
     return $RAY_RET_SUCCESS
 }
 
