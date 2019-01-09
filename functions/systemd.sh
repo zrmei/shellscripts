@@ -50,32 +50,6 @@ function SystemdDisable() {
     return $RAY_RET_SUCCESS
 }
 
-function SystemdEnableTmpl() {
-    for service in $@; do
-        local service_name=$(basename $service)
-        if [ ! -f /etc/systemd/system/$service_name ]; then
-            ray_none_output $RAY_SUDO systemctl enable -f "$(readlink -f "$service_name")"
-        fi
-    done
-
-    ray_printStatusOk "load from: $service"
-
-    return $RAY_RET_SUCCESS
-}
-
-function SystemdDisableTmpl() {
-    for service in $@; do
-        local service_name=$(basename $service)
-        if [ -f /etc/systemd/system/$service_name ]; then
-            ray_none_output $RAY_SUDO systemctl disable $service_name
-        fi
-    done
-
-    clearBrokenLinks
-    ray_printStatusOk "remove $service"
-    return $RAY_RET_SUCCESS
-}
-
 #active inactive
 function IsServiceActive() {
     local active=$(systemctl is-active $1)
@@ -135,7 +109,7 @@ EOF
     done
 
     local cur_path=$(pwd)
-    cd "$script_path" 
+    cd "$script_path"
     $RAY_SUDO /usr/bin/env zsh $script_path/$systemdInit
     cd "$cur_path"
 

@@ -4,7 +4,9 @@ function ss() {
 
 function sr() {
 	$RAY_SUDO systemctl daemon-reload
-    $RAY_SUDO systemctl restart "$@" || return 1
+	if [ $# -gt 0 ]; then
+    	$RAY_SUDO systemctl restart "$@" || return 1
+	fi
 }
 
 function sp() {
@@ -36,11 +38,11 @@ function lnmpctl() {
 }
 
 function wwwroot() {
-    cd /home/wwwroot/$1 || return 1
+    cd $LNMP_DOC_ROOT_PATH/$1 || return 1
 }
 
 function wwwlogs() {
-    cd /home/wwwlogs || return 1
+    cd $LNMP_LOG_ROOT_PATH || return 1
 }
 
 function locateip() {

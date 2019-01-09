@@ -210,8 +210,8 @@ function TailAccessLog() {
     fi
 
     if IsCommandExists lnmp; then
-        if IsFile /home/wwwlogs/access.$1.log; then
-            tail -n ${2:-10} /home/wwwlogs/access.$1.log
+        if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
+            tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/access.$1.log
         fi
     fi
 }
@@ -223,8 +223,8 @@ function CountAccessIP() {
     fi
 
     if IsCommandExists lnmp; then
-        if IsFile /home/wwwlogs/access.$1.log; then
-            cat /home/wwwlogs/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -n ${2:-10}
+        if IsFile $LNMP_LOG_ROOT_PATH/access.$1.log; then
+            cat $LNMP_LOG_ROOT_PATH/access.$1.log | awk '{print  $1}' | sort | uniq -c | sort -rn | head -n ${2:-10}
         fi
     fi
 }
@@ -236,8 +236,8 @@ function TailErrorLog() {
     fi
 
     if IsCommandExists lnmp; then
-        if IsFile /home/wwwlogs/error.$1.log; then
-            tail -n ${2:-10} /home/wwwlogs/error.$1.log
+        if IsFile $LNMP_LOG_ROOT_PATH/error.$1.log; then
+            tail -n ${2:-10} $LNMP_LOG_ROOT_PATH/error.$1.log
         fi
     fi
 }
@@ -249,8 +249,8 @@ function TailErrorNginxLog() {
     fi
 
     if IsCommandExists lnmp; then
-        if IsFile /home/wwwlogs/nginx_error.log; then
-            tail -n ${1:-10} /home/wwwlogs/nginx_error.log
+        if IsFile $LNMP_LOG_ROOT_PATH/nginx_error.log; then
+            tail -n ${1:-10} $LNMP_LOG_ROOT_PATH/nginx_error.log
         fi
     fi
 }
@@ -265,21 +265,23 @@ function VimVHost() {
         return $RAY_RET_FAILED
     fi
 
-    if ! IsDir /usr/local/nginx/conf/vhost; then
+    local vhost_path=${NGINX_VHOST_CONF_PATH:-/usr/local/nginx/conf/vhost}
+
+    if ! IsDir $vhost_path; then
         return $RAY_RET_FAILED
     fi
 
-    local vhost=/usr/local/nginx/conf/vhost/$1.conf
+    local vhost=${vhost_path}/$1.conf
 
     if IsSameStr "$1" "nginx"; then
-        vhost=/usr/local/nginx/conf/nginx.conf
+        vhost=$NGINX_NGINX_CONF_PATH
     fi
 
     if ! IsFile $vhost; then
         if ! ConformInfo "Are you sure to create vhost named $1?"; then
             return $RAY_RET_FAILED
         fi
-        mkTemplateVHost $vhost $@
+        mkTemplateVHost $vhost "$@"
     fi
 
     $RAY_SUDO $RAY_EDIT $vhost
@@ -292,7 +294,9 @@ function ListVHosts() {
         local conf
         local port
         local server_name
-        for conf in /usr/local/nginx/conf/vhost/*.conf; do
+        local vhost_path=${NGINX_VHOST_CONF_PATH:-/usr/local/nginx/conf/vhost}
+
+        for conf in $vhost_path/*.conf; do
             port=`cat $conf | grep 'listen' | awk '{print $2}' | tr "\n;" ' '`
             server_name=`cat $conf | grep 'server_name'  | awk '{$1=""; print $0}' | tr "\n;" ' '`
             printf "WebHost: %-20s \nport: %s \nserver_name: %s\n\n" "$(basename $conf | cut -d . -f1)" "$port" "$server_name"
