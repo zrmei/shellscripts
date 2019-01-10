@@ -3,20 +3,29 @@
 common shell functions，work with [lnmp](https://github.com/licess/lnmp)
 
 ```bash
+functions.alias:
+findFastMirror          jo                      lnmpctl                 locateip                mypublicip
+mypublicip2             sp                      sr                      ss                      st
+wwwlogs                 wwwroot
+
+functions.funny:
+list_of_commands_you_use_most_often     watch_star_wars_via_telnet
+
 functions.git:
-CreateGitProject        VimGitPostReceive
+CompressGitData         CreateGitProject        InstallMyPublicKey      RemoveAllGitConmmitLog  VimGitPostReceive
+changeGitUserEmail
 
 functions.lnmp:
-ListVHosts              MakeDirsOwnToWeb        ResetMysqlPassword
-TailAccessLog           TailErrorLog            TailErrorNginxLog
-VimVHost
+CountAccessIP           ListVHosts              MakeDirsOwnToWeb        ResetMysqlPassword      TailAccessLog
+TailErrorLog            TailErrorNginxLog       VimVHost                mkTemplateVHost         nginx_status
+
 
 functions.os:
-AddFirewallPorts        AddSudoPremission       CheckCentOSVersion
-InstallApps             IsDebian                IsRedHat
-IsZsh
+AddFirewallPorts        AddSudoPremission       ChangeHostName          CheckCentOSVersion      CheckTCPStatus
+FindFileGreaterthan     InstallApps             IsDebian                IsRedHat                RemoveFilesBeforeWeek
+TimeWaitOptimize        UpdateDateTime          addFirewallPort
 
 functions.systemd:
-IsServiceActive         ReloadSystemdUnits      SystemdDisable
-SystemdDisableTmpl      SystemdEnable           SystemdEnableTmpl
+CreateSystemdScript     IsServiceActive         ReloadSystemdUnits      SystemdDisable          SystemdEnable
+clearBrokenLinks
 ```
