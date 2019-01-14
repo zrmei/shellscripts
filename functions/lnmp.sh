@@ -43,7 +43,11 @@ map \$sent_http_content_type \$expires {
 #server {
 #    listen $3;
 #    server_name _;
-#
+#    location = /github/postreceive {
+#        proxy_set_header Host            \$host;
+#        proxy_set_header X-Forwarded-For \$remote_addr;
+#        proxy_pass http://127.0.0.1:17293;
+#    }
 #    return 500;
 #}
 
@@ -66,6 +70,12 @@ server {
     add_header X-Powered-By PHP/5.2.16;
 
     #add_header strict-transport-security: max-age=16070400; includeSubDomains;
+
+    location = /github/postreceive {
+        proxy_set_header Host            \$host;
+        proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_pass http://127.0.0.1:17293;
+    }
 
     #location @backend_server {
     #    fastcgi_connect_timeout     60s;
