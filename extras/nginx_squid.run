@@ -1,0 +1,324 @@
+#!/bin/bash
+
+if [ $(id -u) != "0" ]; then
+    sudo bash $0 $@
+    exit $?
+fi
+
+CUR_PATH=$(dirname "$(readlink -f "$0")")
+
+DEST_SERVER=${1-m.gw261.com}
+SERVER=${2-${SERVER_NAME-proxy0001}}
+
+yum install -y epel-release && yum install -y nginx && yum install -y squid
+
+if ! grep -q '##########HAHA##########' /etc/nginx/nginx.conf; then
+
+cat >/etc/nginx/nginx.conf<<EOF
+##########HAHA##########
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+                      '\$status \$body_bytes_sent "\$http_referer" '
+                      '"\$http_user_agent" "\$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+
+    access_log off;
+}
+EOF
+
+cat > /etc/nginx/conf.d/default.conf <<EOF
+map \$sent_http_content_type \$expires {
+    default                    off;
+    text/html                  epoch;
+    text/css                   max;
+    application/javascript     max;
+    ~image/                    max;
+}
+
+upstream backend {
+    server ${DEST_SERVER}:9000;
+}
+
+#当启用域名时禁用ip访问
+# server {
+#     listen 80;
+#     server_name _;
+
+#     return 500;
+# }
+
+server {
+    listen 80;
+    listen 9000;
+    server_name _;
+
+    expires \$expires;
+
+    location / {
+        fastcgi_connect_timeout     120s;
+        fastcgi_read_timeout        120s;
+        fastcgi_send_timeout        120s;
+        fastcgi_ignore_client_abort on;
+        fastcgi_param  HTTP_REFERER \$http_referer;
+
+        proxy_set_header Host            ${SERVER};
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP       \$remote_addr;
+
+        proxy_pass http://backend;
+        proxy_redirect off;
+    }
+
+    location ~ /\\.well-known {
+        deny all;
+    }
+
+    location ~ /\\. {
+        deny all;
+    }
+
+    #测试
+    error_page 502 /502.html;
+    location /502.html {
+        default_type text/html;
+        return 200 "m.gw261.com; 不可达";
+    }
+
+    access_log  /var/log/nginx/access.${SERVER}.log;
+    error_log   /var/log/nginx/error.${SERVER}.log  error;
+}
+
+EOF
+
+    if [[ "$(cat /var/run/nginx.pid 2>/dev/null)" == "" ]]; then
+        rm -f /var/run/nginx.pid
+    fi
+
+    systemctl start nginx
+fi
+
+systemctl status nginx
+
+if ! grep -q '##########HAHA##########' /etc/squid/squid.conf; then
+
+cat >/etc/squid/squid.conf <<EOF
+##########HAHA##########
+#
+# Recommended minimum configuration:
+#
+
+# Example rule allowing access from your local networks.
+# Adapt to list your (internal) IP networks from where browsing
+# should be allowed
+acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
+acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
+acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+acl CONNECT method CONNECT
+
+#
+# Recommended minimum Access Permission configuration:
+#
+# Deny requests to certain unsafe ports
+http_access deny !Safe_ports
+
+# Deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports
+
+# Only allow cachemgr access from localhost
+http_access allow localhost manager
+http_access deny manager
+
+# We strongly recommend the following be uncommented to protect innocent
+# web applications running on the proxy server who think the only
+# one who can access services on "localhost" is a local user
+#http_access deny to_localhost
+
+#
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+#
+
+# Example rule allowing access from your local networks.
+# Adapt localnet in the ACL section to list your (internal) IP networks
+# from where browsing should be allowed
+http_access allow localnet
+http_access allow localhost
+
+# And finally deny all other access to this proxy
+
+http_access allow all
+
+cache_mem 64 MB
+maximum_object_size 4 MB
+cache_dir ufs /var/spool/squid 100 16 256
+access_log /var/log/squid/access.log
+#http_access allow all
+
+#Squid 3.0
+reply_header_access Via deny all
+reply_header_access X-Forwarded-For deny all
+#Squid 3.1
+via off
+forwarded_for delete
+
+# Squid normally listens to port 3128
+http_port 0.0.0.0:9001
+
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir ufs /var/spool/squid 100 16 256
+
+# Leave coredumps in the first cache dir
+coredump_dir /var/spool/squid
+
+#
+# Add any of your own refresh_pattern entries above these.
+#
+refresh_pattern ^ftp:		1440	20%	10080
+refresh_pattern ^gopher:	1440	0%	1440
+refresh_pattern -i (/cgi-bin/|\\?) 0	0%	0
+refresh_pattern .		0	20%	4320
+EOF
+
+    squid -z | xargs echo
+
+    systemctl restart squid
+fi
+
+systemctl status squid
+
+systemctl start firewalld
+systemctl status firewalld
+
+auto_allow_hosts="$CUR_PATH/auto_allow_hosts_do_not_remove_this.sh"
+
+if [ -f $auto_allow_hosts ]; then
+    chattr -i $auto_allow_hosts
+fi
+
+cat > $auto_allow_hosts <<EOF
+#!bin/bash
+
+CUR_PATH=\$(dirname \$(readlink -f "\$0"))
+
+function is_IP() {
+    if [ \$(echo \$1 | tr '.' ' ' | wc -w) -ne 4 ]; then
+        return 1
+    else
+        for OCTET in \$(echo \$1 | tr '.' ' '); do
+            if ! [[ \$OCTET =~ ^[0-9]+\\$ ]] || [[ \$OCTET -lt 0 ]] || [[ \$OCTET -gt 255 ]]; then
+               return 1
+            fi
+        done
+    fi
+    return 0
+}
+
+while :; do
+    IFS=\$'\\n' read  -d'' -r -a SERVERNAME < \$CUR_PATH/domain.txt
+
+    NEW_SERVER_IP=(
+        \$(
+            for domain in "\${SERVERNAME[@]}"; do
+                if is_IP \$domain; then
+                    echo "\$domain "
+                else
+                    nslookup  \$domain | tail -n 2 | tr -d ' \\n\\t\\r' | awk -F: '{print \$2" "}'
+                fi
+            done
+        )
+    )
+
+    OLD_SERVER_IP=( \$(firewall-cmd --list-rich-rules | awk -F'[= "]' '{print \$9}') )
+
+    echo -e "SERVERNAME: \${SERVERNAME[@]}  \\nOLD_SERVER_IP: \${OLD_SERVER_IP[@]} \\nNEW_SERVER_IP: \${NEW_SERVER_IP[@]}"
+
+    for ipaddr in "\${OLD_SERVER_IP[@]}"; do
+        echo "start check old \$ipaddr"
+        if ! [[ "\${NEW_SERVER_IP[@]}" =~  "\$ipaddr" ]]; then
+            firewall-cmd --permanent --zone=public --remove-rich-rule="rule family=ipv4 source address=\$ipaddr port port=1-9999 protocol=tcp accept"
+        fi
+    done
+
+    for ipaddr in "\${NEW_SERVER_IP[@]}"; do
+        echo "start check new \$ipaddr"
+        if ! [[ "\${OLD_SERVER_IP[@]}" =~ "\$ipaddr" ]]; then
+            firewall-cmd --permanent --zone=public --add-rich-rule="rule family=ipv4 source address=\$ipaddr port port=1-9999 protocol=tcp accept"
+        fi
+    done
+
+    firewall-cmd --reload 2>&1 >/dev/null
+
+    sleep 600
+done
+EOF
+
+echo -e "m.sing63.com\nrayhome.cc" > $CUR_PATH/domain.txt
+
+chattr +i $auto_allow_hosts
+chmod  +x $auto_allow_hosts
+
+update_squid_firewalld="$CUR_PATH/update-squid-firewalld.service"
+
+if [ -f $update_squid_firewalld ]; then
+    chattr -i $update_squid_firewalld
+fi
+
+cat > ${update_squid_firewalld} <<EOF
+[Unit]
+Description=update-squid-firewalld
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=$CUR_PATH
+ExecStartPre=/usr/bin/env touch domain.txt
+ExecStart=/bin/bash ${auto_allow_hosts}
+Restart=always
+TimeoutSec=2s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable ${update_squid_firewalld}
+systemctl daemon-reload
+
+systemctl restart update-squid-firewalld.service
+
+systemctl status update-squid-firewalld.service
