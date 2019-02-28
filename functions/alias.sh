@@ -22,7 +22,7 @@ function jo() {
 }
 
 
-function lnmpctl() {
+function lnmctl() {
     local ssudo
     if ! HasRootPremission; then
         ssudo=sudo
