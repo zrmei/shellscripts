@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+
+read_arg() {
+    if [ $# -eq 3 ]; then
+        echo -e "$3"
+    fi
+    eval "$1=''"
+    echo -n "$1[$2]:"
+    read $1
+
+    if [ "$(eval echo '$'"$1")" = '' ]; then
+        eval "$1='$2'"
+    fi
+}
+
+make_timer() {
+    echo "生成定时器..."
+
+    read_arg Description "A SERVER"
+    read_arg OnCalendar "*-*-* *:*:*" 'useage: year-mouth-day hour:minute:second'
+    read_arg Unit "$Name.service"
+
+    cat >$Name.timer << EOF 
+[Unit]
+Description=$Description
+
+[Timer]
+OnCalendar=$OnCalendar
+Unit=$Unit
+
+[Install]
+WantedBy=timers.target
+EOF
+}
+
+make_service() {
+    echo "生成服务..."
+
+    read_arg Description "a server"
+    read_arg WorkingDirectory "`pwd`"
+    read_arg ExecStart "ls a"
+    read_arg Type "simple" '一次性任务可用 oneshot'
+
+    cat >$Name.service << EOF 
+[Unit]
+Description=$Description
+
+[Service]
+WorkingDirectory=$WorkingDirectory
+ExecStart=$ExecStart
+Type=$Type
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
+
+read_arg Command "3" "1: make timer \n2: make server \n3: make both"
+
+case $Command in
+    1) 
+        read_arg Name "demo"
+        make_timer 
+    ;;
+    2) 
+        read_arg Name "demo"
+        make_service 
+    ;;
+    3)
+        read_arg Name "demo"
+        make_timer
+        make_service
+    ;;
+    *) exit 127 ;;
+esac

@@ -118,4 +118,6 @@ function RunExtraScript() {
     if [ -f $RAY_SCRIP_FILE_PATH/extras/$script_name ]; then
         zsh $RAY_SCRIP_FILE_PATH/extras/$script_name "$@"
     fi
+
+    return -1
 }
