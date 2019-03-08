@@ -39,18 +39,6 @@ map \$sent_http_content_type \$expires {
 #    server unix:/tmp/backend3;
 #}
 
-#当启用域名时禁用ip访问
-#server {
-#    listen $3;
-#    server_name _;
-#    location = /github/postreceive {
-#        proxy_set_header Host            \$host;
-#        proxy_set_header X-Forwarded-For \$remote_addr;
-#        proxy_pass http://127.0.0.1:17293;
-#    }
-#    return 500;
-#}
-
 server {
     listen $3;
     index index.html index.htm index.php;
@@ -84,8 +72,10 @@ server {
     #    fastcgi_ignore_client_abort on;
     #    fastcgi_param  HTTP_REFERER     \$http_referer;
     #
-    #    proxy_set_header Host            \$host;
-    #    proxy_set_header X-Forwarded-For \$remote_addr;
+    #    proxy_set_header Host            \$http_host;
+    #    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    #    proxy_set_header X-Real-IP       \$remote_addr;
+    #    proxy_set_header User-Agent      \$http_user_agent;
     #    proxy_pass http://backend;
     #}
 
