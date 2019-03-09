@@ -253,3 +253,16 @@ function FindFileGreaterthan() {
         $RAY_SUDO find / -size +${1:-50}M -type f -printf "%15s\t%p\n" 2>/dev/null | sort -n -r | less
     fi
 }
+
+function SetupBanner() {
+    if grep -q '#my_ssh_banner' /etc/ssh/sshd_config; then
+        return $RAY_RET_SUCCESS
+    fi
+
+    $RAY_SUDO bash -c "cat >>/etc/ssh/sshd_config<<EOF
+#my_ssh_banner
+Banner $RAY_SCRIP_FILE_PATH/extras/ssh_banner
+EOF"
+
+    $RAY_SUDO service sshd reload
+}

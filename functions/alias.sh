@@ -1,26 +1,54 @@
 function ss() {
-    $RAY_SUDO systemctl start "$@" || return 1
+	if IsCommandExists systemctl; then
+    	$RAY_SUDO systemctl start "$@" || return 1
+	else
+		$RAY_SUDO service "$@" start || return 1
+	fi
+}
+
+function srr() {
+	if IsCommandExists systemctl; then
+    	$RAY_SUDO systemctl daemon-reload
+		if [ $# -gt 0 ]; then
+			$RAY_SUDO systemctl reload "$1" || return 1
+		fi
+	else
+		$RAY_SUDO service "$1" reload || return 1
+	fi
 }
 
 function sr() {
-	$RAY_SUDO systemctl daemon-reload
-	if [ $# -gt 0 ]; then
-    	$RAY_SUDO systemctl restart "$@" || return 1
+	if IsCommandExists systemctl; then
+    	$RAY_SUDO systemctl daemon-reload
+		if [ $# -gt 0 ]; then
+			$RAY_SUDO systemctl restart "$1" || return 1
+		fi
+	else
+		$RAY_SUDO service "$1" restart || return 1
 	fi
 }
 
 function sp() {
-    $RAY_SUDO systemctl stop "$@" || return 1
+	if IsCommandExists systemctl; then
+    	$RAY_SUDO systemctl stop "$@" || return 1
+	else
+		$RAY_SUDO service "$@" stop || return 1
+	fi
 }
 
 function st() {
-    $RAY_SUDO systemctl status "$@" || return 1
+	if IsCommandExists systemctl; then
+		$RAY_SUDO systemctl status "$1" || return 1
+	else
+		$RAY_SUDO service "$1" status || return 1
+	fi
 }
 
 function jo() {
-    $RAY_SUDO journalctl -f -u "$@" || return 1
+	if IsCommandExists journalctl; then
+    	$RAY_SUDO journalctl -f -u "$@" || return 1
+	fi
 }
-
 
 function lnmctl() {
     local ssudo

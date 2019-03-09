@@ -254,6 +254,6 @@ function isNumber() {
 
 function ShowHosts() {
     if IsFile /etc/ssh/ssh_config; then
-        grep -Pi 'host(name)? (?!\*)' /etc/ssh/ssh_config | awk '{printf "%-20s", $2; getline; print $2;}'
+        grep -Pi 'host(name)? (?!\*)' /etc/ssh/ssh_config | awk '{printf "%-20s", $2; getline; print $2;}' | sort
     fi
 }
