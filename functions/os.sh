@@ -266,3 +266,33 @@ EOF"
 
     $RAY_SUDO service sshd reload
 }
+
+function BuildDeployKey() {
+local args=( "$@" )
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -f) local out_file="$2"; shift 2;;
+        -C) local comment="$2"; shift 2;;
+
+        --out-file=*) local out_file="${1#*=}"; shift 1;;
+        --comment=*) local comment="${1#*=}"; shift 1;;
+
+        --help) cat <<EOF
+useage: BuildDeployKey [option] [args...]
+
+options:
+    -C,--comment   
+    -f,--out-file
+    --help
+EOF;
+            exit 0;;
+        -*) echo "unknown option: $1\n"; exit 1;;
+    esac
+done
+
+    local name=${comment:-"$(hostname)gh.com"}
+    local key_file=${out_file:-$HOME/.ssh/id_rsa}
+    echo "file path: ${key_file}"
+    ssh-keygen -t rsa -q -C "$name" -f "${key_file}" -N ""
+}
