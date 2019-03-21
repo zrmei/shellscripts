@@ -255,15 +255,23 @@ function FindFileGreaterthan() {
 }
 
 function SetupBanner() {
-    if grep -q '#my_ssh_banner' /etc/ssh/sshd_config; then
-        return $RAY_RET_SUCCESS
-    fi
+    if IsDebian; then
+        $RAY_SUDO rm -f /etc/update-motd.d/*
+        $RAY_SUDO bash -c "cat >/etc/update-motd.d/10-help-text<<EOF
+#!/bin/bash
+cat $RAY_SCRIP_FILE_PATH/extras/ssh_banner
+EOF";
+        $RAY_SUDO chmod +x /etc/update-motd.d/10-help-text
+    else
+        if grep -q '#my_ssh_banner' /etc/ssh/sshd_config; then
+            return $RAY_RET_SUCCESS
+        fi
 
-    $RAY_SUDO bash -c "cat >>/etc/ssh/sshd_config<<EOF
+        $RAY_SUDO bash -c "cat >>/etc/ssh/sshd_config<<EOF
 #my_ssh_banner
 Banner $RAY_SCRIP_FILE_PATH/extras/ssh_banner
 EOF"
-
+    fi
     $RAY_SUDO service sshd reload
 }
 

@@ -1,15 +1,14 @@
-=================================注意=================================
-编辑nginx配置文件    VimVHost [project_name]
-更新nginx服务        lnmctl nginx reload|restart|start|stop
+=================================NOTICE=================================
+编辑nginx配置文件  VimVHost [project_name]
+更新nginx服务      lnmctl nginx reload|restart|start|stop
 
-去往项目目录         wwwroot [project_name]
-去往日志目录         wwwlogs
+去往项目目录    wwwroot [project_name]
+去往日志目录    wwwlogs
 
 centos7以及ubuntu16.04以上可用
-查看服务状态         systemctl status|start|stop|reload [service_name.[service|timer]]
-生成服务             RunExtraScript mksystemd
-注册服务             SystemdEnable [service_name.[service|timer]]
+服务操作    systemctl status|start|stop|reload [service_name.[service|timer]]
+生成服务    RunExtraScript mksystemd
+注册服务    SystemdEnable [service_name.[service|timer]]
 
-查看帮助函数         ShowFunctions
-=================================注意=================================
-
+查看帮助函数    ShowFunctions
+=================================NOTICE=================================
