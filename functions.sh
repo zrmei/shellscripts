@@ -30,6 +30,11 @@ function ShowFunctions() {
     local width=`tput cols`
     local step=`expr $width / 25`
 
+    local my_type='A-Z'
+    if [ "$1" == "all" ]; then
+        my_type='A-Za-z'
+    fi
+
     for file in `find $RAY_SCRIP_FILE_PATH/functions -name "*.sh" -print | sort`; do
         local num=1
         local name=$file
@@ -38,8 +43,7 @@ function ShowFunctions() {
         name=${name//\//.}
 
         echo "$name:"
-
-        for func in `cat $file | grep -Eo " [A-Za-z](.*?)\(\) " | tr -d '()' | sort`; do
+        for func in `cat $file | grep -Eo " [$my_type](.*?)\(\) " | tr -d '()' | sort`; do
             printf "%-22s" $func
             if (( $num % $step )); then
                 echo -n "\t"
@@ -64,49 +68,6 @@ function UpdateRayFunctions() {
     $RAY_SUDO git pull
 
     . $RAY_SCRIP_FILE_PATH/functions.sh all
-
-    if IsRedHat && CheckCentOSVersion -le 6; then
-        $RAY_SUDO crontab -l | { cat; echo "15 05 * * 0 /usr/bin/env bash -c \"cd $RAY_SCRIP_FILE_PATH && if ! git pull; then git fetch --all; git reset --hard origin/master; git pull; fi\""; } | uniq | $RAY_SUDO crontab -
-        cd $curPath
-        return $RAY_RET_SUCCESS
-    fi
-
-    if ! IsFile updateShellscripts.service; then
-        $RAY_SUDO touch $RAY_SCRIP_FILE_PATH/updateShellscripts.service
-        $RAY_SUDO chown $(whoami):$(whoami) $RAY_SCRIP_FILE_PATH/updateShellscripts.service
-
-        cat > $RAY_SCRIP_FILE_PATH/updateShellscripts.service <<EOF
-[Unit]
-Description=update shellscripts
-
-[Service]
-WorkingDirectory=$RAY_SCRIP_FILE_PATH
-ExecStart=/usr/bin/env bash -c "git fetch --all; git reset --hard origin/master; git pull;"
-Type=oneshot
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-        $RAY_SUDO touch $RAY_SCRIP_FILE_PATH/updateShellscripts.timer
-        $RAY_SUDO chown $(whoami):$(whoami) $RAY_SCRIP_FILE_PATH/updateShellscripts.timer
-
-        cat > $RAY_SCRIP_FILE_PATH/updateShellscripts.timer <<EOF
-[Unit]
-Description=update shellscripts
-
-[Timer]
-OnCalendar=Sun, 05:15
-
-[Install]
-WantedBy=timers.target
-EOF
-
-        SystemdEnable $RAY_SCRIP_FILE_PATH/updateShellscripts.service
-        SystemdEnable $RAY_SCRIP_FILE_PATH/updateShellscripts.timer
-
-        $RAY_SUDO systemctl restart updateShellscripts.timer
-    fi
 
     cd $curPath
 }

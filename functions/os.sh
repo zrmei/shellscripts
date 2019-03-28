@@ -93,6 +93,7 @@ function addFirewallPort() {
             fi
         else
             ray_printStatusWarn "service ufw is not running..."
+            return $RAY_RET_FAILED
         fi
     elif IsRedHat; then
         if CheckCentOSVersion -ge 7; then
@@ -109,12 +110,13 @@ function addFirewallPort() {
                 ray_printStatusWarn "service firewalld is not running..."
             fi
         else
-            if IsCommandExists iptables && IsServiceActive iptables; then
-                ray_none_output $RAY_SUDO iptables -I INPUT -p tcp --dport $1 -j ACCEPT
+            if IsCommandExists iptables; then
+                ray_none_output $RAY_SUDO iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $1 -j ACCEPT
                 ray_none_output $RAY_SUDO /etc/init.d/iptables save
                 ray_none_output $RAY_SUDO service iptables reload
             else
                 ray_printStatusWarn "service iptables is not running..."
+                return $RAY_RET_FAILED
             fi
         fi
     fi
@@ -303,4 +305,26 @@ done
     local key_file=${out_file:-$HOME/.ssh/id_rsa}
     echo "file path: ${key_file}"
     ssh-keygen -t rsa -q -C "$name" -f "${key_file}" -N ""
+}
+
+function FastGithub() {
+    if ! grep -q "#github" /etc/hosts; then
+    $RAY_SUDO bash -c '
+cat >>/etc/hosts<<EOF
+#github
+13.229.188.59   github.com
+13.250.177.223  github.com
+151.101.196.133 assets-cdn.github.com
+151.101.24.133  assets-cdn.github.com
+151.101.77.194  github.global.ssl.fastly.net
+151.101.229.194 github.global.ssl.fastly.net
+185.31.16.1185  github.global.ssl.fastly.net
+74.125.237.1    dl-ssl.google.com
+173.194.127.200 groups.google.com
+192.30.252.131  github.com
+185.31.16.185   github.global.ssl.fastly.net
+74.125.128.95   ajax.googleleapis.com
+EOF
+'
+    fi
 }
