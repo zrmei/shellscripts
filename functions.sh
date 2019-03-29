@@ -31,7 +31,7 @@ function ShowFunctions() {
     local step=`expr $width / 25`
 
     local my_type='A-Z'
-    if [ "$1" == "all" ]; then
+    if [ "$1" = "all" ]; then
         my_type='A-Za-z'
     fi
 
