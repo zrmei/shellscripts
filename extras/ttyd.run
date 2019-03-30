@@ -20,7 +20,7 @@ Description=a terminal over web
 [Service]
 User=$User
 WorkingDirectory=${WORK_DIR}
-ExecStart=${TTYD_DIR}/ttyd -p 17593 -r 120 -m 5 -c ray:lovehome bash
+ExecStart=${TTYD_DIR}/ttyd -p 17594 -r 120 -m 5 -c ray:lovehome bash
 Type=simple
 
 [Install]
