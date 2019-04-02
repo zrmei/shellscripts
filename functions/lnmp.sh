@@ -136,9 +136,9 @@ function ResetMysqlPassword() {
     done
 
     echo "Stoping ${DB_Name}..."
-    /etc/init.d/${DB_Name} stop
+    $RAY_SUDO /etc/init.d/${DB_Name} stop
     echo "Starting ${DB_Name} with skip grant tables"
-    /usr/local/${DB_Name}/bin/mysqld_safe --skip-grant-tables >/dev/null 2>&1 &
+    $RAY_SUDO /usr/local/${DB_Name}/bin/mysqld_safe --skip-grant-tables >/dev/null 2>&1 &
     sleep 5
     echo "update ${DB_Name} root password..."
     if echo "${DB_Ver}" | grep -Eqi '^8.0.|^5.7.|^10.2.'; then
@@ -154,10 +154,10 @@ EOF
 
     if [ $? -eq 0 ]; then
         echo "Password reset succesfully. Now killing mysqld softly"
-        killall mysqld
+        $RAY_SUDO killall mysqld
         sleep 5
         echo "Restarting the actual ${DB_Name} service"
-        /etc/init.d/${DB_Name} start
+        $RAY_SUDO /etc/init.d/${DB_Name} start
         echo "Password successfully reset to '${DB_Root_Password}'"
     else
         echo "Reset ${DB_Name} root password failed!"

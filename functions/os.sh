@@ -82,7 +82,7 @@ function addFirewallPort() {
             if $RAY_SUDO ufw status | grep -Eq "(^$1/tcp)|( $1/tcp)"; then
                 :
             else
-                ray_none_output $RAY_SUDO ufw allow $1/tcp 
+                ray_none_output $RAY_SUDO ufw allow $1/tcp
                 ray_none_output $RAY_SUDO ufw reload
             fi
 
@@ -111,7 +111,7 @@ function addFirewallPort() {
             fi
         else
             if IsCommandExists iptables; then
-                ray_none_output $RAY_SUDO iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $1 -j ACCEPT
+                ray_none_output $RAY_SUDO iptables -I INPUT -p tcp --dport $1 -j ACCEPT
                 ray_none_output $RAY_SUDO /etc/init.d/iptables save
                 ray_none_output $RAY_SUDO service iptables reload
             else
@@ -194,6 +194,12 @@ function ChangeHostName() {
     if IsFile /etc/hosts; then
         $RAY_SUDO bash -c "sed -i 's/$oldName/$Name/g' /etc/hosts;"
     fi
+
+    if CheckCentOSVersion 7; then
+        echo "HOSTNAME=$Name.localdomain" >> /etc/sysconfig/network
+    elif CheckCentOSVersion 6; then
+        sed -i "s#^HOSTNAME=*#HOSTNAME=$Name.localdomain#" /etc/sysconfig/network
+    fi
 }
 
 function UpdateDateTime() {
@@ -219,7 +225,7 @@ net.core.wmem_max = 16777216
 net.ipv4.ip_local_port_range = 1024 65535
 net.ipv4.tcp_fin_timeout = 10
 net.ipv4.tcp_keepalive_time = 600
-net.ipv4.tcp_keepalive_intvl = 30 
+net.ipv4.tcp_keepalive_intvl = 30
 net.ipv4.tcp_keepalive_probes = 3
 net.ipv4.tcp_max_orphans = 3276800
 net.ipv4.tcp_max_syn_backlog = 65535
@@ -290,7 +296,7 @@ while [ "$#" -gt 0 ]; do
 useage: BuildDeployKey [option] [args...]
 
 options:
-    -C,--comment   
+    -C,--comment
     -f,--out-file
     --help
 EOF
