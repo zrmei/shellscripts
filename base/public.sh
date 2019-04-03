@@ -140,6 +140,14 @@ function IsZsh() {
     return $RAY_RET_FAILED
 }
 
+function IsBash() {
+    if [[ `ps -p $$ -oargs=` =~ "bash" ]]; then
+        return $RAY_RET_SUCCESS
+    fi
+
+    return $RAY_RET_FAILED
+}
+
 function FindInDir() {
     local findpath
     local params

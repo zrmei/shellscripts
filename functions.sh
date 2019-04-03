@@ -1,4 +1,4 @@
-RAY_SCRIP_FILE_PATH=$(dirname $(readlink -f "$0"))
+RAY_SCRIP_FILE_PATH="$(dirname "$(readlink -f "$0")")"
 
 function RRequire() {
     for module in $@; do

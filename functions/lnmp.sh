@@ -93,12 +93,12 @@ server {
         deny all;
     }
 
-    location ~* \\.(gif|jpg|jepg|png|bmp)$ {
-        valid_referers none blocked;
-        if (\$invalid_referer) {
-            return 403;
-        }
-    }
+    #location ~* \\.(gif|jpg|jepg|png|bmp)$ {
+    #    valid_referers none blocked;
+    #    if (\$invalid_referer) {
+    #        return 403;
+    #    }
+    #}
 
     access_log  /home/wwwlogs/access.$2.log;
     error_log   /home/wwwlogs/error.$2.log  error;

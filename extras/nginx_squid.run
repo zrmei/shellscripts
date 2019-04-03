@@ -234,7 +234,7 @@ fi
 cat > $auto_allow_hosts <<EOF
 #!bin/bash
 
-CUR_PATH=\$(dirname \$(readlink -f "\$0"))
+CUR_PATH=\$(dirname "\$(readlink -f "\$0")")
 
 function is_IP() {
     if [ \$(echo \$1 | tr '.' ' ' | wc -w) -ne 4 ]; then
