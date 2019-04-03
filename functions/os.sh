@@ -24,7 +24,7 @@ function IsRedHat() {
 function CheckCentOSVersion() {
     if [[ $# -eq 0 ]]; then
         ray_echo_Red "no enough arguments in ${FUNCNAME[0]}"
-        exit $RAY_RET_FAILED
+        return $RAY_RET_FAILED
     fi
 
     if ! IsRedHat; then
@@ -32,11 +32,11 @@ function CheckCentOSVersion() {
     fi
 
     local RHEL_Ver=0
-    if grep -Eqi "release 5." /etc/redhat-release; then
+    if $RAY_SUDO grep -Eqi "release 5." /etc/redhat-release; then
         RHEL_Ver=5
-        elif grep -Eqi "release 6." /etc/redhat-release; then
+        elif $RAY_SUDO grep -Eqi "release 6." /etc/redhat-release; then
         RHEL_Ver=6
-        elif grep -Eqi "release 7." /etc/redhat-release; then
+        elif $RAY_SUDO grep -Eqi "release 7." /etc/redhat-release; then
         RHEL_Ver=7
     fi
 

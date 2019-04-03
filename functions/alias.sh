@@ -66,11 +66,11 @@ function lnmctl() {
 }
 
 function wwwroot() {
-    cd $LNMP_DOC_ROOT_PATH/$1 || return 1
+    cd $LNMP_DOC_ROOT_PATH/$1 2>/dev/null || return 1
 }
 
 function wwwlogs() {
-    cd $LNMP_LOG_ROOT_PATH || return 1
+    cd $LNMP_LOG_ROOT_PATH  2>/dev/null || return 1
 }
 
 function locateip() {
