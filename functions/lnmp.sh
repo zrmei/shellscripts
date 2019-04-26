@@ -283,10 +283,14 @@ function ListVHosts() {
     local server_name
     local vhost_path=${NGINX_VHOST_CONF_PATH:-/usr/local/nginx/conf/vhost}
 
+    if ! IsDir $vhost_path; then
+        return $RAY_RET_FAILED
+    fi
+
     for conf in $vhost_path/*.conf; do
         port=`cat $conf | grep 'listen' | awk '{print $2}' | tr "\n;" ' '`
         server_name=`cat $conf | grep 'server_name'  | awk '{$1=""; print $0}' | tr "\n;" ' '`
-        printf "WebHost: %-20s \nport: %s \nserver_name: %s\n\n" "$(basename $conf | cut -d . -f1)" "$port" "$server_name"
+        printf "WebHost: %-20s \nport: %s \nserver_name: %s\n\n" "$(basename ${conf%.conf})" "$port" "$server_name"
     done
 
     return $RAY_RET_SUCCESS
