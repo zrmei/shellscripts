@@ -1,7 +1,6 @@
 RRequire base.public
 
 if CheckCentOSVersion -lt 7 && ! IsDebian; then
-    ray_echo_Yellow "functions.systemd 中函数在当前系统下不可用"
     return $RAY_RET_FAILED
 fi
 

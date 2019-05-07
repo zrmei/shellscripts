@@ -6,7 +6,7 @@ function ss() {
 	fi
 }
 
-function srr() {
+function sl() {
 	if IsCommandExists systemctl; then
     	$RAY_SUDO systemctl daemon-reload
 		if [ $# -gt 0 ]; then
